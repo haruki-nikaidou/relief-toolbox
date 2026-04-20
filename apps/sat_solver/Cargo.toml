@@ -10,3 +10,5 @@ crate-type = ["cdylib"]
 wasm-bindgen.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+smallvec.workspace = true
+compact_str.workspace = true
