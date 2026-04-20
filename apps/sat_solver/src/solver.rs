@@ -22,7 +22,7 @@ impl SymbolTable {
                 }
             })
             .collect::<Vec<_>>()
-            .join_compact("&")
+            .join_compact(" & ")
     }
 }
 
