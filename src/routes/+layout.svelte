@@ -1,8 +1,8 @@
 <script lang="ts">
-    import "./layout.css";
-    import favicon from "$lib/assets/favicon.svg";
+import "./layout.css";
+import favicon from "$lib/assets/favicon.svg";
 
-    let { children } = $props();
+let { children } = $props();
 </script>
 
 <svelte:head
@@ -16,7 +16,9 @@
         style="height: var(--header-height); box-shadow: var(--shadow-outer);"
     >
         <h1 class="m-0 text-2xl font-semibold text-foreground">
-            Relief Toolbox
+            <a href="/">
+                Relief Toolbox
+            </a>
         </h1>
     </header>
     <div class="flex flex-1 flex-col">
