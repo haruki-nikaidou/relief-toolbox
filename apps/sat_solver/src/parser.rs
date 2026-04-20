@@ -28,18 +28,19 @@ pub enum Lixer {
 pub fn tokenize(input: &str) -> Result<Vec<Lixer>, ParseError> {
     input
         .chars()
-        .map(|c| match c {
-            'a'..='z' => Ok(Lixer::Variable(c.to_ascii_uppercase())),
-            'A'..='Z' => Ok(Lixer::Variable(c)),
-            '!' => Ok(Lixer::Not),
-            '&' => Ok(Lixer::And),
-            '|' => Ok(Lixer::Or),
-            '^' => Ok(Lixer::Xor),
-            '(' => Ok(Lixer::LParen),
-            ')' => Ok(Lixer::RParen),
-            _ => Err(ParseError::UnexpectedChar(c)),
+        .filter_map(|c| match c {
+            c if c.is_whitespace() => None,
+            'a'..='z' => Some(Ok(Lixer::Variable(c.to_ascii_uppercase()))),
+            'A'..='Z' => Some(Ok(Lixer::Variable(c))),
+            '!' => Some(Ok(Lixer::Not)),
+            '&' => Some(Ok(Lixer::And)),
+            '|' => Some(Ok(Lixer::Or)),
+            '^' => Some(Ok(Lixer::Xor)),
+            '(' => Some(Ok(Lixer::LParen)),
+            ')' => Some(Ok(Lixer::RParen)),
+            _ => Some(Err(ParseError::UnexpectedChar(c))),
         })
-        .collect()
+        .collect::<Result<Vec<Lixer>, ParseError>>()
 }
 
 pub struct Parser<'a> {

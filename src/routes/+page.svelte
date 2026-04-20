@@ -19,6 +19,12 @@ const appCollections: AppCollection[] = [
 			{ icon: "mage:key-fill", appName: "Random Password", href: "/apps/random_password" },
 		],
 	},
+	{
+		title: "Daily Life Algorithm",
+		apps: [
+			{ icon: "tabler:logic-and", appName: "SAT Solver", href: "/apps/sat_solver" },
+		],
+	},
 ];
 </script>
 

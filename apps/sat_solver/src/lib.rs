@@ -1,6 +1,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use compact_str::CompactString;
+use wasm_bindgen::prelude::*;
 
 use crate::solver::{solve_long, solve_short};
 
@@ -38,5 +39,43 @@ pub fn solve_sat(expr: String) -> Result<ReturnResult, parser::ParseError> {
     } else {
         let result = solve_long(&expr, &symbols);
         Ok(ReturnResult::Boolean(result))
+    }
+}
+
+fn parse_error_message(err: &parser::ParseError) -> String {
+    match err {
+        parser::ParseError::UnexpectedToken(tok) => {
+            format!("Unexpected token: {tok:?}")
+        }
+        parser::ParseError::UnexpectedChar(c) => {
+            format!("Unexpected character: '{c}'")
+        }
+        parser::ParseError::UnexpectedEndOfInput => {
+            "Unexpected end of input".to_string()
+        }
+        parser::ParseError::NoVariables => {
+            "Expression contains no variables".to_string()
+        }
+    }
+}
+
+#[wasm_bindgen(js_name = solveSatJson)]
+pub fn solve_sat_json(expr: String) -> String {
+    match solve_sat(expr) {
+        Ok(ReturnResult::Minterm(ms)) => serde_json::json!({
+            "kind": "minterms",
+            "values": ms,
+        })
+        .to_string(),
+        Ok(ReturnResult::Boolean(v)) => serde_json::json!({
+            "kind": "boolean",
+            "value": v,
+        })
+        .to_string(),
+        Err(e) => serde_json::json!({
+            "kind": "error",
+            "error": parse_error_message(&e),
+        })
+        .to_string(),
     }
 }
