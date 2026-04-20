@@ -1,24 +1,17 @@
 <script lang="ts">
-import { Button } from "$lib/components/ui/button/index.js";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "$lib/components/ui/card/index.js";
+import Icon from "@iconify/svelte";
 </script>
 
-<section class="mx-auto flex w-full max-w-3xl flex-1 items-center px-4 py-8">
-	<Card class="w-full">
-		<CardHeader>
-			<CardTitle>Generator Tools</CardTitle>
-			<CardDescription>Select a tool to start.</CardDescription>
-		</CardHeader>
-		<CardContent>
-			<Button href="/apps/random_password" class="w-full justify-start" variant="outline">
-				Random Password
-			</Button>
-		</CardContent>
-	</Card>
-</section>
+<main class="container mx-auto px-4 py-8">
+  <h2 class="text-xl font-semibold">Generator Tools</h2>
+	<section class="flex flex-row flex-wrap gap-4 justify-start mt-4 mb-8">
+    <a 
+		class="neuo-btn h-36 w-36 rounded-xl flex flex-col items-center justify-center gap-2" 
+		href="/apps/random_password"
+		>
+      <Icon icon="mage:key" class="size-12" />
+			<p class="text-sm font-semibold text-shadow-lg">Random Password</p>
+		</a>
+	</section>
+</main>
+
