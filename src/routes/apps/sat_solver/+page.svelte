@@ -80,13 +80,13 @@ const examples = ["A & !B", "(A|B) & (!A|C)", "A^B^C", "!(A&B)|C"];
     <CardContent class="space-y-6">
       <div class="rounded-lg bg-muted p-4 text-sm space-y-1">
         <p class="font-medium">Syntax</p>
-        <div class="grid grid-cols-2 gap-x-4 gap-y-0.5">
-          <span><code>a–z / A–Z</code> — variables</span>
-          <span><code>!</code> — NOT</span>
-          <span><code>&amp;</code> — AND</span>
-          <span><code>|</code> — OR</span>
-          <span><code>^</code> — XOR</span>
-          <span><code>(...)</code> — grouping</span>
+        <div class="flex flex-col gap-y-2">
+          <span><code>a–z / A–Z</code>: variables (case-insensitive)</span>
+          <span><code>!</code>: NOT</span>
+          <span><code>&amp;</code>: AND</span>
+          <span><code>|</code>: OR</span>
+          <span><code>^</code>: XOR</span>
+          <span><code>(...)</code>: grouping</span>
         </div>
       </div>
 
@@ -106,7 +106,7 @@ const examples = ["A & !B", "(A|B) & (!A|C)", "A^B^C", "!(A&B)|C"];
 
       <div class="space-y-2">
         <Textarea
-          placeholder="e.g. A & !B | C"
+          placeholder="Enter a boolean expression to solve"
           rows={3}
           class="font-mono"
           bind:value={expr}
