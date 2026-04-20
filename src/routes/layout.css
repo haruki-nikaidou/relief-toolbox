@@ -164,41 +164,31 @@
 }
 
 @layer components {
-  /* Buttons */
-  [data-slot="button"]:not([data-variant="link"]):not([data-variant="ghost"]) {
+  .neuo-btn {
     box-shadow: var(--shadow-outer);
     transition:
       box-shadow 0.2s ease,
       transform 0.2s ease;
   }
-  [data-slot="button"]:not([data-variant="link"]):not(
-      [data-variant="ghost"]
-    ):hover {
+  .neuo-btn:hover {
     box-shadow: var(--shadow-outer-sm);
   }
-  [data-slot="button"]:not([data-variant="link"]):not(
-      [data-variant="ghost"]
-    ):active {
+  .neuo-btn:active {
     box-shadow: var(--shadow-inner);
     transform: translateY(2px);
   }
 
-  /* Inputs */
-  [data-slot="input"],
-  [data-slot="textarea"] {
+  .neuo-input {
     box-shadow: none;
     background-color: var(--background);
     border: none;
     transition: box-shadow 0.2s ease;
   }
-  [data-slot="input"]:hover,
-  [data-slot="textarea"]:hover {
+  .neuo-input:hover {
     box-shadow: var(--shadow-inner);
   }
-  [data-slot="input"]:focus-visible,
-  [data-slot="input"]:focus,
-  [data-slot="textarea"]:focus-visible,
-  [data-slot="textarea"]:focus {
+  .neuo-input:focus-visible,
+  .neuo-input:focus {
     box-shadow: var(--shadow-inner-deep);
   }
 }

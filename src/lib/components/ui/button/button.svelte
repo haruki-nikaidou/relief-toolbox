@@ -63,7 +63,7 @@ export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
 	<a
 		bind:this={ref}
 		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={cn(buttonVariants({ variant, size }), variant !== "link" && variant !== "ghost" && "neuo-btn", className)}
 		href={disabled ? undefined : href}
 		aria-disabled={disabled}
 		role={disabled ? "link" : undefined}
@@ -76,7 +76,7 @@ export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
 	<button
 		bind:this={ref}
 		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={cn(buttonVariants({ variant, size }), variant !== "link" && variant !== "ghost" && "neuo-btn", className)}
 		{type}
 		{disabled}
 		{...restProps}

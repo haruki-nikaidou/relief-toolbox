@@ -31,7 +31,7 @@ let {
 		bind:this={ref}
 		data-slot={dataSlot}
 		class={cn(
-			"aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 h-9 rounded-3xl px-3 py-1 text-base transition-[color,box-shadow,background-color] aria-invalid:ring-3 md:text-sm placeholder:text-muted-foreground w-full min-w-0 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+			"neuo-input aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 h-9 rounded-3xl px-3 py-1 text-base transition-[color,box-shadow,background-color] aria-invalid:ring-3 md:text-sm placeholder:text-muted-foreground w-full min-w-0 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
 			className
 		)}
 		type="file"
@@ -44,7 +44,7 @@ let {
 		bind:this={ref}
 		data-slot={dataSlot}
 		class={cn(
-			"aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 h-9 rounded-3xl px-3 py-1 text-base transition-[color,box-shadow,background-color] aria-invalid:ring-3 md:text-sm placeholder:text-muted-foreground w-full min-w-0 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+			"neuo-input aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 h-9 rounded-3xl px-3 py-1 text-base transition-[color,box-shadow,background-color] aria-invalid:ring-3 md:text-sm placeholder:text-muted-foreground w-full min-w-0 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
 			className
 		)}
 		{type}
