@@ -30,7 +30,7 @@ impl Expression {
     pub fn eval(&self, symbols: &SymbolTable, values: u32) -> bool {
         match self {
             Expression::Variable(c) => {
-                let id = symbols.var_to_id[(*c as u8 - b'a') as usize];
+                let id = symbols.var_to_id[(*c as u8 - b'A') as usize];
                 (values & (1 << id)) != 0
             }
             Expression::Not(expr) => !expr.eval(symbols, values),

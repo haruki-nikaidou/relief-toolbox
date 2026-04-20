@@ -19,7 +19,7 @@ pub fn solve_sat(expr: String) -> Result<ReturnResult, parser::ParseError> {
     expr.collect_variables(&mut vars);
     let mut var_to_id = [0u8; 26];
     for (i, &var) in vars.iter().enumerate() {
-        var_to_id[(var as u8 - b'a') as usize] = i as u8;
+        var_to_id[(var as u8 - b'A') as usize] = i as u8;
     }
     let symbols = solver::SymbolTable {
         var_to_id,
