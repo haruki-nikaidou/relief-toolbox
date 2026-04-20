@@ -28,6 +28,5 @@ vite.config.ts.timestamp-*
 
 # rust
 target/
-apps/sat_solver/pkg/
 
 reference-code

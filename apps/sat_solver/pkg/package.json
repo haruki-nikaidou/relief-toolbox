@@ -1,0 +1,15 @@
+{
+  "name": "sat_solver",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "sat_solver_bg.wasm",
+    "sat_solver.js",
+    "sat_solver.d.ts"
+  ],
+  "main": "sat_solver.js",
+  "types": "sat_solver.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
