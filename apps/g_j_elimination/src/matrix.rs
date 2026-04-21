@@ -15,6 +15,20 @@ impl Row {
 pub struct Matrix(pub SmallVec<[Row; 10]>);
 
 impl Matrix {
+    pub fn row_add(&self, from: usize, to: usize, factor: Rational64) -> Matrix {
+        let from_row = self.0[from].clone();
+        let from_row = from_row.0.iter().map(|item| *item * factor);
+        let to_row = self.0[to].clone();
+        let new_row: Rc<[_]> = to_row
+            .0
+            .iter()
+            .zip(from_row)
+            .map(|(a, b)| *a + b)
+            .collect();
+        let mut new_matrix = self.clone();
+        new_matrix.0[to] = Row(new_row);
+        new_matrix
+    }
     pub fn row_reorder(&self, a: usize, b: usize) -> Matrix {
         let mut new_matrix = self.clone();
         new_matrix.0.swap(a, b);
