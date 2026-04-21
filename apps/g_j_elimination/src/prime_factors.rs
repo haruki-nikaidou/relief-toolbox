@@ -29,4 +29,7 @@ impl PrimeFactorsTable {
         }
         PrimeFactorsTable(table)
     }
+    pub fn max_number(&self) -> usize {
+        self.0.len() - 1
+    }
 }
