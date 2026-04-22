@@ -1,6 +1,6 @@
 use num::{Rational64, Zero};
 use smallvec::SmallVec;
-use std::rc::Rc;
+use std::{collections::LinkedList, rc::Rc};
 
 #[derive(Clone)]
 pub struct Row(pub Rc<[Rational64]>);
@@ -21,6 +21,10 @@ impl Row {
             .collect();
         Row(new_row)
     }
+    pub fn mul_by(&self, factor: Rational64) -> Row {
+        let new_row: Rc<[_]> = self.0.iter().map(|x| *x * factor).collect();
+        Row(new_row)
+    }
 }
 
 #[derive(Clone)]
@@ -39,6 +43,13 @@ impl Matrix {
     pub fn row_reorder(&self, a: usize, b: usize) -> Matrix {
         let mut new_matrix = self.clone();
         new_matrix.0.swap(a, b);
+        new_matrix
+    }
+    pub fn row_mul(&self, target: usize, factor: Rational64) -> Matrix {
+        let target_row = self.0[target].clone();
+        let new_row: Rc<[_]> = target_row.0.iter().map(|item| *item * factor).collect();
+        let mut new_matrix = self.clone();
+        new_matrix.0[target] = Row(new_row);
         new_matrix
     }
     pub fn re_arrange(&self) -> Vec<MatrixOperation> {
@@ -84,17 +95,54 @@ impl Matrix {
         }
         re_arrange
     }
-    pub fn is_row_echelon(&self) -> bool {
-        let mut last_leading_zeros = None;
+    pub fn is_reduced_row_echelon(&self) -> bool {
+        let mut leading_one_cols = Vec::new();
+        let mut seen_zero_row = false;
+
         for row in &self.0 {
             let leading_zeros = row.leading_zeros();
-            if let Some(last) = last_leading_zeros {
-                if leading_zeros <= last && leading_zeros != row.0.len() {
+
+            // Check if this is a zero row
+            if leading_zeros == row.0.len() {
+                seen_zero_row = true;
+                continue;
+            }
+
+            // If we've seen a zero row, no non-zero rows can appear after it
+            if seen_zero_row {
+                return false;
+            }
+
+            // Check that the leading entry is 1
+            if row.0[leading_zeros] != Rational64::from_integer(1) {
+                return false;
+            }
+
+            // Check that leading 1 positions are strictly increasing
+            if let Some(&last_col) = leading_one_cols.last() {
+                if leading_zeros <= last_col {
                     return false;
                 }
             }
-            last_leading_zeros = Some(leading_zeros);
+
+            leading_one_cols.push(leading_zeros);
         }
+
+        // Check that each column with a leading 1 has zeros everywhere else
+        for &col in &leading_one_cols {
+            for row in &self.0 {
+                let leading_zeros = row.leading_zeros();
+                // Skip the row that has the leading 1 in this column
+                if leading_zeros == col {
+                    continue;
+                }
+                // Check that all other rows have 0 in this column
+                if col < row.0.len() && row.0[col] != Rational64::from_integer(0) {
+                    return false;
+                }
+            }
+        }
+
         true
     }
 }
@@ -217,6 +265,310 @@ fn detect_row_add(matrix: &Matrix) -> Option<MatrixOperation> {
         })
 }
 
-pub fn gauss_jordan_elimination(matrix: Matrix) -> Vec<MatrixOperation> {
-    todo!()
+fn transform_to_reduced_row_echelon_form(matrix: &Matrix) -> Vec<MatrixOperation> {
+    let mut operations = Vec::new();
+    let mut current_matrix = matrix.clone();
+
+    // Forward elimination: eliminate entries below each pivot
+    for i in 0..current_matrix.0.len() {
+        // Find the pivot for the current row
+        let pivot_col = current_matrix.0[i]
+            .0
+            .iter()
+            .position(|&x| !x.is_zero())
+            .unwrap_or(current_matrix.0[i].0.len());
+
+        if pivot_col == current_matrix.0[i].0.len() {
+            // This is a zero row, skip it
+            continue;
+        }
+
+        // Make the leading entry 1 by multiplying the row by the inverse of the leading entry
+        let leading_entry = current_matrix.0[i].0[pivot_col];
+        if leading_entry != Rational64::from_integer(1) {
+            let factor = Rational64::from_integer(1) / leading_entry;
+            current_matrix = current_matrix.row_mul(i, factor);
+            operations.push(MatrixOperation::RowMul {
+                target: i,
+                factor,
+                after: Box::new(current_matrix.clone()),
+            });
+        }
+
+        // Eliminate the entries below the leading entry
+        for j in (i + 1)..current_matrix.0.len() {
+            let factor = -current_matrix.0[j].0[pivot_col];
+            if !factor.is_zero() {
+                current_matrix = current_matrix.row_add(i, j, factor);
+                operations.push(MatrixOperation::RowAdd {
+                    from_row: i,
+                    to_row: j,
+                    factor,
+                    after: Box::new(current_matrix.clone()),
+                });
+            }
+        }
+    }
+
+    // Backward elimination: eliminate entries above each pivot
+    for i in (0..current_matrix.0.len()).rev() {
+        // Find the pivot for the current row
+        let pivot_col = current_matrix.0[i]
+            .0
+            .iter()
+            .position(|&x| !x.is_zero())
+            .unwrap_or(current_matrix.0[i].0.len());
+
+        if pivot_col == current_matrix.0[i].0.len() {
+            // This is a zero row, skip it
+            continue;
+        }
+
+        // Eliminate all entries above the pivot
+        for j in 0..i {
+            let factor = -current_matrix.0[j].0[pivot_col];
+            if !factor.is_zero() {
+                current_matrix = current_matrix.row_add(i, j, factor);
+                operations.push(MatrixOperation::RowAdd {
+                    from_row: i,
+                    to_row: j,
+                    factor,
+                    after: Box::new(current_matrix.clone()),
+                });
+            }
+        }
+    }
+
+    operations
+}
+
+pub fn gauss_jordan_elimination(mut matrix: Matrix) -> LinkedList<MatrixOperation> {
+    let mut operations = LinkedList::new();
+    operations.push_back(MatrixOperation::Start(Box::new(matrix.clone())));
+
+    // Use heuristic algorithm to make the matrix almost a reduced row echelon form
+    while let Some(op) = detect_row_add(&matrix) {
+        operations.push_back(op.clone());
+        match op {
+            MatrixOperation::RowAdd { after, .. } | MatrixOperation::RowReorder { after, .. } => {
+                matrix = *after;
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    // Re-arrange rows to put them in proper order
+    let re_arrange_ops = matrix.re_arrange();
+    for op in re_arrange_ops {
+        match &op {
+            MatrixOperation::RowReorder { after, .. } => {
+                matrix = *after.clone();
+            }
+            _ => unreachable!(),
+        }
+        operations.push_back(op);
+    }
+
+    // Complete the transformation to reduced row echelon form
+    let rref_ops = transform_to_reduced_row_echelon_form(&matrix);
+    operations.extend(rref_ops);
+
+    operations
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_matrix(rows: Vec<Vec<i64>>) -> Matrix {
+        let matrix_rows: SmallVec<[Row; 10]> = rows
+            .into_iter()
+            .map(|row| {
+                let rationals: Rc<[Rational64]> = row
+                    .into_iter()
+                    .map(|val| Rational64::from_integer(val))
+                    .collect();
+                Row(rationals)
+            })
+            .collect();
+        Matrix(matrix_rows)
+    }
+
+    #[test]
+    fn test_transform_to_rref_simple() {
+        // Matrix:
+        // [2, 4, 6]
+        // [1, 2, 3]
+        let matrix = create_matrix(vec![vec![2, 4, 6], vec![1, 2, 3]]);
+
+        let ops = transform_to_reduced_row_echelon_form(&matrix);
+
+        // Get the final matrix
+        let final_matrix = match ops.last() {
+            Some(MatrixOperation::RowAdd { after, .. })
+            | Some(MatrixOperation::RowMul { after, .. })
+            | Some(MatrixOperation::RowReorder { after, .. }) => after.as_ref(),
+            _ => &matrix,
+        };
+
+        // Check if it's in RREF
+        assert!(final_matrix.is_reduced_row_echelon());
+    }
+
+    #[test]
+    fn test_transform_to_rref_3x3() {
+        // Matrix:
+        // [1, 2, 3]
+        // [2, 4, 8]
+        // [1, 3, 5]
+        let mut matrix = create_matrix(vec![vec![1, 2, 3], vec![2, 4, 8], vec![1, 3, 5]]);
+
+        // Order the matrix first (transform_to_reduced_row_echelon_form expects ordered rows)
+        let re_arrange_ops = matrix.re_arrange();
+        for op in re_arrange_ops {
+            match op {
+                MatrixOperation::RowReorder { after, .. } => {
+                    matrix = *after;
+                }
+                _ => unreachable!(),
+            }
+        }
+
+        let ops = transform_to_reduced_row_echelon_form(&matrix);
+
+        // Get the final matrix
+        let final_matrix = match ops.last() {
+            Some(MatrixOperation::RowAdd { after, .. })
+            | Some(MatrixOperation::RowMul { after, .. })
+            | Some(MatrixOperation::RowReorder { after, .. }) => after.as_ref(),
+            _ => &matrix,
+        };
+
+        // Check if it's in RREF
+        assert!(final_matrix.is_reduced_row_echelon());
+    }
+
+    #[test]
+    fn test_gauss_jordan_elimination_simple() {
+        // Matrix:
+        // [2, 4, 6]
+        // [1, 2, 3]
+        let matrix = create_matrix(vec![vec![2, 4, 6], vec![1, 2, 3]]);
+
+        let operations = gauss_jordan_elimination(matrix);
+
+        // Get the final matrix from the last operation
+        let final_matrix = match operations.back() {
+            Some(MatrixOperation::RowAdd { after, .. })
+            | Some(MatrixOperation::RowMul { after, .. })
+            | Some(MatrixOperation::RowReorder { after, .. }) => after.as_ref(),
+            Some(MatrixOperation::Start(m)) => m.as_ref(),
+            None => panic!("No operations"),
+        };
+
+        // Check if the final matrix is in RREF
+        assert!(final_matrix.is_reduced_row_echelon());
+    }
+
+    #[test]
+    fn test_gauss_jordan_elimination_3x4() {
+        // Matrix (augmented matrix for a system of equations):
+        // [1, 2, 1, 4]
+        // [2, 5, 3, 10]
+        // [3, 7, 4, 14]
+        let matrix = create_matrix(vec![vec![1, 2, 1, 4], vec![2, 5, 3, 10], vec![3, 7, 4, 14]]);
+
+        let operations = gauss_jordan_elimination(matrix);
+
+        // Get the final matrix from the last operation
+        let final_matrix = match operations.back() {
+            Some(MatrixOperation::RowAdd { after, .. })
+            | Some(MatrixOperation::RowMul { after, .. })
+            | Some(MatrixOperation::RowReorder { after, .. }) => after.as_ref(),
+            Some(MatrixOperation::Start(m)) => m.as_ref(),
+            None => panic!("No operations"),
+        };
+
+        // Check if the final matrix is in RREF
+        assert!(final_matrix.is_reduced_row_echelon());
+
+        // Verify operations list is not empty and starts with Start
+        assert!(!operations.is_empty());
+        assert!(matches!(
+            operations.front(),
+            Some(MatrixOperation::Start(_))
+        ));
+    }
+
+    #[test]
+    fn test_is_reduced_row_echelon_true() {
+        // Matrix in RREF:
+        // [1, 0, 2]
+        // [0, 1, 3]
+        let rows: SmallVec<[Row; 10]> = vec![
+            Row(Rc::from([
+                Rational64::from_integer(1),
+                Rational64::from_integer(0),
+                Rational64::from_integer(2),
+            ])),
+            Row(Rc::from([
+                Rational64::from_integer(0),
+                Rational64::from_integer(1),
+                Rational64::from_integer(3),
+            ])),
+        ]
+        .into_iter()
+        .collect();
+        let matrix = Matrix(rows);
+
+        assert!(matrix.is_reduced_row_echelon());
+    }
+
+    #[test]
+    fn test_is_reduced_row_echelon_false_not_leading_one() {
+        // Matrix not in RREF (leading entry is not 1):
+        // [2, 0, 4]
+        // [0, 1, 3]
+        let rows: SmallVec<[Row; 10]> = vec![
+            Row(Rc::from([
+                Rational64::from_integer(2),
+                Rational64::from_integer(0),
+                Rational64::from_integer(4),
+            ])),
+            Row(Rc::from([
+                Rational64::from_integer(0),
+                Rational64::from_integer(1),
+                Rational64::from_integer(3),
+            ])),
+        ]
+        .into_iter()
+        .collect();
+        let matrix = Matrix(rows);
+
+        assert!(!matrix.is_reduced_row_echelon());
+    }
+
+    #[test]
+    fn test_is_reduced_row_echelon_false_column_not_zero() {
+        // Matrix not in RREF (column with leading 1 has non-zero entry):
+        // [1, 2, 3]
+        // [0, 1, 4]
+        let rows: SmallVec<[Row; 10]> = vec![
+            Row(Rc::from([
+                Rational64::from_integer(1),
+                Rational64::from_integer(2),
+                Rational64::from_integer(3),
+            ])),
+            Row(Rc::from([
+                Rational64::from_integer(0),
+                Rational64::from_integer(1),
+                Rational64::from_integer(4),
+            ])),
+        ]
+        .into_iter()
+        .collect();
+        let matrix = Matrix(rows);
+
+        assert!(!matrix.is_reduced_row_echelon());
+    }
 }
