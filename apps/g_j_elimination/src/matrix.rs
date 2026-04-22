@@ -59,12 +59,12 @@ impl Matrix {
         // selection sort
         for i in 0..self.0.len() {
             let (max_row, _) = match re_arrange.iter().last() {
-                None => self.0.iter().enumerate().fold(
-                    (0, cols + 1),
-                    |(max_row_idx, zeros), (i, row)| {
+                None => self.0.iter().enumerate().skip(i).fold(
+                    (i, cols + 1),
+                    |(max_row_idx, zeros), (j, row)| {
                         let leading_zeros = row.leading_zeros();
                         if leading_zeros < zeros {
-                            (i, leading_zeros)
+                            (j, leading_zeros)
                         } else {
                             (max_row_idx, zeros)
                         }
@@ -338,6 +338,10 @@ fn transform_to_reduced_row_echelon_form(matrix: &Matrix) -> Vec<MatrixOperation
             }
         }
     }
+
+    // Final reordering to ensure rows are properly sorted by leading zeros
+    let re_arrange_ops = current_matrix.re_arrange();
+    operations.extend(re_arrange_ops);
 
     operations
 }
