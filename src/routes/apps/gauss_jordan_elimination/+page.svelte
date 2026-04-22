@@ -38,14 +38,8 @@
             const sign = q < 0 ? -1 : 1;
             return [(sign * p) / g, (sign * q) / g];
         }
-        if (!/^-?\d*\.?\d+$/.test(s)) return null;
-        const dotIdx = s.indexOf(".");
-        if (dotIdx === -1) return [parseInt(s), 1];
-        const decPlaces = s.length - dotIdx - 1;
-        const denom = Math.pow(10, decPlaces);
-        const numer = Math.round(parseFloat(s) * denom);
-        const g = gcd(Math.abs(numer), denom);
-        return [numer / g, denom / g];
+        if (!/^-?\d+$/.test(s)) return null;
+        return [parseInt(s), 1];
     }
 
     function formatRat(p: number, q: number): string {
@@ -70,12 +64,12 @@
     }
 
     let rowString = $state("3");
-    let rows = $derived(() => {
+    let rows = $derived.by(() => {
         const n = parseInt(rowString, 10);
         return isNaN(n) || n < 2 || n > 10 ? 3 : n;
     });
     let colString = $state("4");
-    let cols = $derived(() => {
+    let cols = $derived.by(() => {
         const n = parseInt(colString, 10);
         return isNaN(n) || n < 2 || n > 10 ? 4 : n;
     });
@@ -162,8 +156,8 @@
             <CardTitle>Gauss–Jordan Elimination</CardTitle>
             <CardDescription>
                 Reduces a matrix to reduced row echelon form (RREF). Supports
-                2×2 to 10×10 matrices. Enter integers, fractions (1/2), or
-                decimals (0.5).
+                2×2 to 10×10 matrices. Enter integers or fractions (e.g. 1/2,
+                -3/4).
             </CardDescription>
         </CardHeader>
         <CardContent class="space-y-6">
@@ -219,8 +213,8 @@
                         class="grid gap-1 p-2"
                         style="grid-template-columns: repeat({cols}, minmax(4rem, 1fr))"
                     >
-                        {#each Array.from({ length: rows() }, (_, i) => i) as i (i)}
-                            {#each Array.from({ length: cols() }, (_, j) => j) as j (j)}
+                        {#each Array.from({ length: rows }, (_, i) => i) as i (i)}
+                            {#each Array.from({ length: cols }, (_, j) => j) as j (j)}
                                 <input
                                     type="text"
                                     class="border-border bg-background focus:ring-ring w-16 rounded border px-1 py-0.5 text-center font-mono text-sm focus:outline-none focus:ring-1"
