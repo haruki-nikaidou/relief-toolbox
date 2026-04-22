@@ -11,7 +11,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"fmt": "biome format --write",
-		"build:wasm": "wasm-pack build apps/sat_solver --target web"
+		"build:wasm": "wasm-pack build apps/sat_solver --target web && wasm-pack build apps/g_j_elimination --target web",
+		"build:wasm:gj": "wasm-pack build apps/g_j_elimination --target web"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.12",

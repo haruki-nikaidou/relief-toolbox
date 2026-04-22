@@ -4,8 +4,8 @@ import { defineConfig } from 'vite';
 import wasmPack from 'vite-plugin-wasm-pack';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit(), wasmPack(['./apps/sat_solver'])],
+	plugins: [tailwindcss(), sveltekit(), wasmPack(['./apps/sat_solver', './apps/g_j_elimination'])],
 	worker: {
-		plugins: () => [wasmPack(['./apps/sat_solver'])],
+		plugins: () => [wasmPack(['./apps/sat_solver', './apps/g_j_elimination'])],
 	},
 });

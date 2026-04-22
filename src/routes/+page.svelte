@@ -23,6 +23,7 @@ const appCollections: AppCollection[] = [
 		title: "Daily Life Algorithm",
 		apps: [
 			{ icon: "tabler:logic-and", appName: "SAT Solver", href: "/apps/sat_solver" },
+			{ icon: "tabler:matrix", appName: "Gauss–Jordan Elimination", href: "/apps/gauss_jordan_elimination" },
 		],
 	},
 ];
