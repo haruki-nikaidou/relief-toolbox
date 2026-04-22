@@ -1,127 +1,127 @@
 <script lang="ts">
-    import * as Select from "$lib/components/ui/select/index.js";
-    import { onMount, onDestroy, untrack } from "svelte";
-    import { Button } from "$lib/components/ui/button/index.js";
-    import {
-        Card,
-        CardContent,
-        CardDescription,
-        CardHeader,
-        CardTitle,
-    } from "$lib/components/ui/card/index.js";
-    import { Loader2 } from "@lucide/svelte";
-    import {
-        GJClient,
-        type GJResult,
-        type StepData,
-        type RatCell,
-    } from "./gj-client.js";
+import * as Select from "$lib/components/ui/select/index.js";
+import { onMount, onDestroy, untrack } from "svelte";
+import { Button } from "$lib/components/ui/button/index.js";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "$lib/components/ui/card/index.js";
+import { Loader2 } from "@lucide/svelte";
+import {
+  GJClient,
+  type GJResult,
+  type StepData,
+  type RatCell,
+} from "./gj-client.js";
 
-    function gcd(a: number, b: number): number {
-        a = Math.abs(Math.round(a));
-        b = Math.abs(Math.round(b));
-        while (b) {
-            [a, b] = [b, a % b];
-        }
-        return a || 1;
+function gcd(a: number, b: number): number {
+  a = Math.abs(Math.round(a));
+  b = Math.abs(Math.round(b));
+  while (b) {
+    [a, b] = [b, a % b];
+  }
+  return a || 1;
+}
+
+function parseRational(s: string): [number, number] | null {
+  s = s.trim();
+  if (!s) return null;
+  const frac = s.match(/^(-?\d+)\s*\/\s*(-?\d+)$/);
+  if (frac) {
+    const p = parseInt(frac[1]);
+    const q = parseInt(frac[2]);
+    if (q === 0) return null;
+    const g = gcd(Math.abs(p), Math.abs(q));
+    const sign = q < 0 ? -1 : 1;
+    return [(sign * p) / g, (sign * q) / g];
+  }
+  if (!/^-?\d+$/.test(s)) return null;
+  return [parseInt(s), 1];
+}
+
+function formatRat(p: number, q: number): string {
+  if (q === 1) return `${p}`;
+  if (q === -1) return `${-p}`;
+  return `${p}/${q}`;
+}
+
+function stepDescription(step: StepData): string {
+  switch (step.op) {
+    case "start":
+      return "Initial matrix";
+    case "row_reorder":
+      return `R${step.a + 1} ↔ R${step.b + 1}`;
+    case "row_mul":
+      return `R${step.target + 1} ×= ${formatRat(step.factor.p, step.factor.q)}`;
+    case "row_add": {
+      const f = formatRat(step.factor.p, step.factor.q);
+      return `R${step.to_row + 1} += (${f}) × R${step.from_row + 1}`;
     }
+  }
+}
 
-    function parseRational(s: string): [number, number] | null {
-        s = s.trim();
-        if (!s) return null;
-        const frac = s.match(/^(-?\d+)\s*\/\s*(-?\d+)$/);
-        if (frac) {
-            const p = parseInt(frac[1]);
-            const q = parseInt(frac[2]);
-            if (q === 0) return null;
-            const g = gcd(Math.abs(p), Math.abs(q));
-            const sign = q < 0 ? -1 : 1;
-            return [(sign * p) / g, (sign * q) / g];
-        }
-        if (!/^-?\d+$/.test(s)) return null;
-        return [parseInt(s), 1];
-    }
+let rowString = $state("3");
+let rows = $derived.by(() => {
+  const n = parseInt(rowString, 10);
+  return Number.isNaN(n) || n < 2 || n > 10 ? 3 : n;
+});
+let colString = $state("4");
+let cols = $derived.by(() => {
+  const n = parseInt(colString, 10);
+  return Number.isNaN(n) || n < 2 || n > 10 ? 4 : n;
+});
+let cells = $state<string[][]>(
+  Array.from({ length: 3 }, () => Array.from({ length: 4 }, () => "0")),
+);
+let computing = $state(false);
+let result = $state<GJResult | null>(null);
+let parseError = $state<string | null>(null);
+let client: GJClient | null = null;
 
-    function formatRat(p: number, q: number): string {
-        if (q === 1) return `${p}`;
-        if (q === -1) return `${-p}`;
-        return `${p}/${q}`;
-    }
-
-    function stepDescription(step: StepData): string {
-        switch (step.op) {
-            case "start":
-                return "Initial matrix";
-            case "row_reorder":
-                return `R${step.a + 1} ↔ R${step.b + 1}`;
-            case "row_mul":
-                return `R${step.target + 1} ×= ${formatRat(step.factor.p, step.factor.q)}`;
-            case "row_add": {
-                const f = formatRat(step.factor.p, step.factor.q);
-                return `R${step.to_row + 1} += (${f}) × R${step.from_row + 1}`;
-            }
-        }
-    }
-
-    let rowString = $state("3");
-    let rows = $derived.by(() => {
-        const n = parseInt(rowString, 10);
-        return isNaN(n) || n < 2 || n > 10 ? 3 : n;
-    });
-    let colString = $state("4");
-    let cols = $derived.by(() => {
-        const n = parseInt(colString, 10);
-        return isNaN(n) || n < 2 || n > 10 ? 4 : n;
-    });
-    let cells = $state<string[][]>(
-        Array.from({ length: 3 }, () => Array.from({ length: 4 }, () => "0")),
+$effect(() => {
+  const r = rows;
+  const c = cols;
+  untrack(() => {
+    cells = Array.from({ length: r }, (_, i) =>
+      Array.from({ length: c }, (_, j) => cells[i]?.[j] ?? "0"),
     );
-    let computing = $state(false);
-    let result = $state<GJResult | null>(null);
-    let parseError = $state<string | null>(null);
-    let client: GJClient | null = null;
+  });
+});
 
-    $effect(() => {
-        const r = rows;
-        const c = cols;
-        untrack(() => {
-            cells = Array.from({ length: r }, (_, i) =>
-                Array.from({ length: c }, (_, j) => cells[i]?.[j] ?? "0"),
-            );
-        });
-    });
-
-    async function compute() {
-        if (computing || !client) return;
-        parseError = null;
-        const parsedRows: [number, number][][] = [];
-        for (let i = 0; i < rows; i++) {
-            const row: [number, number][] = [];
-            for (let j = 0; j < cols; j++) {
-                const r = parseRational(cells[i][j]);
-                if (r === null) {
-                    parseError = `Invalid value at row ${i + 1}, column ${j + 1}: "${cells[i][j]}"`;
-                    return;
-                }
-                row.push(r);
-            }
-            parsedRows.push(row);
-        }
-        computing = true;
-        result = null;
-        result = await client.solve({ rows: parsedRows });
-        computing = false;
+async function compute() {
+  if (computing || !client) return;
+  parseError = null;
+  const parsedRows: [number, number][][] = [];
+  for (let i = 0; i < rows; i++) {
+    const row: [number, number][] = [];
+    for (let j = 0; j < cols; j++) {
+      const r = parseRational(cells[i][j]);
+      if (r === null) {
+        parseError = `Invalid value at row ${i + 1}, column ${j + 1}: "${cells[i][j]}"`;
+        return;
+      }
+      row.push(r);
     }
+    parsedRows.push(row);
+  }
+  computing = true;
+  result = null;
+  result = await client.solve({ rows: parsedRows });
+  computing = false;
+}
 
-    onMount(() => {
-        if (typeof window !== "undefined") {
-            client = new GJClient();
-        }
-    });
+onMount(() => {
+  if (typeof window !== "undefined") {
+    client = new GJClient();
+  }
+});
 
-    onDestroy(() => {
-        client?.terminate();
-    });
+onDestroy(() => {
+  client?.terminate();
+});
 </script>
 
 {#snippet matrixDisplay(matrix: RatCell[][])}
@@ -137,7 +137,7 @@
             >
                 {#each matrix as row, rowIdx (rowIdx)}
                     {#each row as cell, colIdx (colIdx)}
-                        <span class="min-w-[2.5rem] text-center"
+                        <span class="min-w-10 text-center"
                             >{formatRat(cell.p, cell.q)}</span
                         >
                     {/each}

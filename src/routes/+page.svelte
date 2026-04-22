@@ -2,30 +2,42 @@
 import AppIcon from "./AppIcon.svelte";
 
 interface AppEntry {
-	icon: string;
-	appName: string;
-	href: string;
+  icon: string;
+  appName: string;
+  href: string;
 }
 
 interface AppCollection {
-	title: string;
-	apps: AppEntry[];
+  title: string;
+  apps: AppEntry[];
 }
 
 const appCollections: AppCollection[] = [
-	{
-		title: "Generator Tools",
-		apps: [
-			{ icon: "mage:key-fill", appName: "Random Password", href: "/apps/random_password" },
-		],
-	},
-	{
-		title: "Daily Life Algorithm",
-		apps: [
-			{ icon: "tabler:logic-and", appName: "SAT Solver", href: "/apps/sat_solver" },
-			{ icon: "tabler:matrix", appName: "Gauss–Jordan Elimination", href: "/apps/gauss_jordan_elimination" },
-		],
-	},
+  {
+    title: "Generator Tools",
+    apps: [
+      {
+        icon: "mage:key-fill",
+        appName: "Random Password",
+        href: "/apps/random_password",
+      },
+    ],
+  },
+  {
+    title: "Daily Life Algorithm",
+    apps: [
+      {
+        icon: "tabler:logic-and",
+        appName: "SAT Solver",
+        href: "/apps/sat_solver",
+      },
+      {
+        icon: "tabler:matrix",
+        appName: "Gauss–Jordan Elimination",
+        href: "/apps/gauss_jordan_elimination",
+      },
+    ],
+  },
 ];
 </script>
 

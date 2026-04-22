@@ -41,7 +41,10 @@ async function solve() {
   if (!expr.trim() || solving) return;
   solving = true;
   result = null;
-  if (!client) { solving = false; return; }
+  if (!client) {
+    solving = false;
+    return;
+  }
   result = await client.solve(expr);
   solving = false;
 }

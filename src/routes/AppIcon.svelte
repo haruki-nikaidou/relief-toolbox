@@ -1,13 +1,13 @@
 <script lang="ts">
-    import Icon from "@iconify/svelte";
+import Icon from "@iconify/svelte";
 
-    interface Props {
-        icon: string;
-        appName: string;
-        href: string;
-    }
+interface Props {
+  icon: string;
+  appName: string;
+  href: string;
+}
 
-    let { icon, appName, href }: Props = $props();
+let { icon, appName, href }: Props = $props();
 </script>
 
 <a
