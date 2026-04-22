@@ -47,7 +47,7 @@ const appCollections: AppCollection[] = [
     title: "Encode/Decode",
     apps: [
       {
-        icon: "mage:qr-code",
+        icon: "material-symbols:qr-code-2-add-rounded",
         appName: "QR Code Generator",
         href: "/apps/qr_code",
       },

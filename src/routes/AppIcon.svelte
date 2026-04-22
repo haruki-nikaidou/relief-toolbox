@@ -15,5 +15,7 @@ let { icon, appName, href }: Props = $props();
     {href}
 >
     <Icon {icon} class="size-12" />
-    <p class="text-sm font-semibold text-shadow-lg text-center">{appName}</p>
+    <p class="text-sm font-semibold text-shadow-lg text-center px-1">
+        {appName}
+    </p>
 </a>
