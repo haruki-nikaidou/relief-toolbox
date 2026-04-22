@@ -204,7 +204,7 @@ fn detect_row_add(matrix: &Matrix) -> Option<MatrixOperation> {
         .max_by_key(|opt| opt.map(|(_, _, _, eval)| eval).unwrap_or(0))
         .flatten()
         .and_then(|(from_row, to_row, factor, eval)| {
-            if eval < 0 {
+            if eval <= 0 {
                 None
             } else {
                 Some(MatrixOperation::RowAdd {
