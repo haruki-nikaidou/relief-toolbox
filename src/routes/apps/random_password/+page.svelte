@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onDestroy } from "svelte";
 import { Button } from "$lib/components/ui/button/index.js";
+import { Toggle } from "$lib/components/ui/toggle/index.js";
 import { Slider } from "$lib/components/ui/slider/index.js";
 import {
   Card,
@@ -17,8 +18,6 @@ import {
   PASSWORD_SLIDER_MAX,
   PASSWORD_SLIDER_MIN,
 } from "$lib/password.js";
-import { cn } from "$lib/utils.js";
-
 type PasswordOptionKey = keyof PasswordOptions;
 
 const PasswordOptionKeyArray = [
@@ -118,21 +117,16 @@ function optionLabel(option: PasswordOptionKey): string {
 
             <div class="space-y-2">
                 <p class="text-sm font-medium">Options</p>
-                <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {#each PasswordOptionKeyArray as option}
-                        <Button
-                            type="button"
-                            variant="outline"
+                        <Toggle
+                            pressed={options[option]}
+                            onPressedChange={() => toggleOption(option)}
                             size="sm"
-                            onclick={() => toggleOption(option)}
-                            class={cn(
-                                "w-full",
-                                options[option] &&
-                                    "bg-primary text-primary-foreground",
-                            )}
+                            class="w-full"
                         >
                             {optionLabel(option)}
-                        </Button>
+                        </Toggle>
                     {/each}
                 </div>
             </div>
