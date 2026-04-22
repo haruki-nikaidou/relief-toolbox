@@ -29,4 +29,7 @@ vite.config.ts.timestamp-*
 # rust
 target/
 
+# Commit WASM
+!/apps/*/pkg/*
+
 reference-code
