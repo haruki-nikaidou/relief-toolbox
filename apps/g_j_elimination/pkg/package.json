@@ -1,0 +1,15 @@
+{
+  "name": "g_j_elimination",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "g_j_elimination_bg.wasm",
+    "g_j_elimination.js",
+    "g_j_elimination.d.ts"
+  ],
+  "main": "g_j_elimination.js",
+  "types": "g_j_elimination.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
