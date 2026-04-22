@@ -51,6 +51,11 @@ const appCollections: AppCollection[] = [
         appName: "QR Code Generator",
         href: "/apps/qr_code",
       },
+      {
+        icon: "uil:qrcode-scan",
+        appName: "QR Code Scanner",
+        href: "/apps/qr_code_scanner",
+      },
     ],
   },
 ];
