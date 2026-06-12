@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as Select from "$lib/components/ui/select/index.js";
-  import {onMount, onDestroy, untrack} from "svelte";
+  import {onMount, onDestroy} from "svelte";
   import {Button} from "$lib/components/ui/button/index.js";
   import {
     Card,
@@ -73,26 +73,14 @@
     const n = parseInt(colString, 10);
     return Number.isNaN(n) || n < 2 || n > 10 ? 4 : n;
   });
-  let untrackedCells = Array.from({length: 3}, () => Array.from({length: 4}, () => "0"));
-  let cells = $state<string[][]>(
-    newCells(untrackedCells, () => rows, () => cols)
-  );
+  // Sparse store of entered values keyed by [row][col]. Missing entries default
+  // to "0" on read, so the array does not need to be resized when rows/cols
+  // change (which avoids out-of-bounds access during render).
+  let cells = $state<string[][]>([]);
   let computing = $state(false);
   let result = $state<GJResult | null>(null);
   let parseError = $state<string | null>(null);
   let client: GJClient | null = null;
-
-  function newCells(cells: string[][], getRow: () => number, getCol: () => number): string[][] {
-    return Array.from({length: getRow()}, (_, i) =>
-      Array.from({length: getCol()}, (_, j) => cells[i]?.[j] ?? "0"),
-    );
-  }
-
-  $effect(
-    () => {
-      untrackedCells = cells;
-    }
-  )
 
   async function compute() {
     if (computing || !client) return;
@@ -101,9 +89,10 @@
     for (let i = 0; i < rows; i++) {
       const row: [number, number][] = [];
       for (let j = 0; j < cols; j++) {
-        const r = parseRational(cells[i][j]);
+        const raw = cells[i]?.[j] ?? "0";
+        const r = parseRational(raw);
         if (r === null) {
-          parseError = `Invalid value at row ${i + 1}, column ${j + 1}: "${cells[i][j]}"`;
+          parseError = `Invalid value at row ${i + 1}, column ${j + 1}: "${raw}"`;
           return;
         }
         row.push(r);
@@ -220,7 +209,12 @@
                 <input
                     type="text"
                     class="border-border bg-background focus:ring-ring w-16 rounded border px-1 py-0.5 text-center font-mono text-sm focus:outline-none focus:ring-1"
-                    bind:value={cells[i][j]}
+                    bind:value={
+                      () => cells[i]?.[j] ?? "0",
+                      (v) => {
+                        (cells[i] ??= [])[j] = v;
+                      }
+                    }
                 />
               {/each}
             {/each}
